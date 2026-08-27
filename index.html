@@ -251,6 +251,7 @@
         let timerInterval;
         let currentSolutions = []; 
         let testDurationSeconds = 600;
+        let isAMC = false;
 
         // Fetch Problems & Solutions
         startBtn.addEventListener('click', () => {
@@ -270,13 +271,17 @@
             ])
             .then(([probText, solText]) => {
                 // Parse solutions file based on standard layout[cite: 2]
+               isAMC = selectedFile.toUpperCase().includes('AMC'); // Determine test type
+
+                // Parse solutions file
                 const solutionBlocks = solText.split(/(?=\*\*Problem \d+\*\*)/g);
                 solutionBlocks.forEach((block) => {
                     if (block.trim() === '') return;
-                    // Extracts the integer answer placed on the line beneath "**Problem X**"[cite: 2]
-                    const match = block.match(/\*\*Problem \d+\*\*\s+(\d+)/); 
+                    // Updated regex to catch numbers OR letters (A-E)
+                    const match = block.match(/\*\*Problem \d+\*\*\s+([A-Ea-e0-9]+)/); 
                     if (match) {
-                        currentSolutions.push(parseInt(match[1], 10));
+                        // Store as uppercase string instead of parseInt
+                        currentSolutions.push(match[1].toUpperCase());
                     }
                 });
 
@@ -291,7 +296,14 @@
                     if (block.trim() === '') return;
                     problemCount++;
                     
-                    let formattedBlock = block.replace(/\*\*(Problem \d+)\*\*/g, '<strong>$1</strong><br>');
+                   let formattedBlock = block.replace(/\*\*(Problem \d+)\*\*/g, '<strong>$1</strong><br>');
+
+                    // Set input restrictions dynamically
+                    let inputPlaceholder = isAMC ? "A" : "000";
+                    let inputMaxLen = isAMC ? "1" : "3";
+                    let inputFilter = isAMC 
+                        ? "this.value = this.value.toUpperCase().replace(/[^A-E]/g, '');" 
+                        : "this.value = this.value.replace(/[^0-9]/g, '');";
                     
                     const problemRow = document.createElement('div');
                     problemRow.className = 'problem-row';
@@ -299,12 +311,10 @@
                         <div class="problem-text" id="prob-${problemCount}-text">${formattedBlock}</div>
                         <div class="answer-box">
                             <input type="text" class="answer-input" id="prob-${problemCount}-input" 
-                                maxlength="4" placeholder="000" 
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                                maxlength="${inputMaxLen}" placeholder="${inputPlaceholder}" 
+                                oninput="${inputFilter}">
                         </div>
                     `;
-                    problemsContainer.appendChild(problemRow);
-                });
 
                 if (window.MathJax) {
                     MathJax.typesetPromise();
@@ -362,17 +372,30 @@
 
             for (let i = 1; i <= problemCount; i++) {
                 const probText = document.getElementById(`prob-${i}-text`).innerHTML;
-                const rawInput = document.getElementById(`prob-${i}-input`).value.trim();
-                
-                // Format the student's answer or output N.A.
-                const formattedAnswer = rawInput === "" ? "N.A." : rawInput.padStart(3, '0');
 
-                // Determine if correct based on the solutions array populated from problems_solutions.tex[cite: 2]
-                const correctSolution = currentSolutions[i - 1]; 
-                const isCorrect = (rawInput !== "" && parseInt(rawInput, 10) === correctSolution);
-                
-                const formattedCorrectSolution = correctSolution !== undefined ? correctSolution.toString().padStart(3, '0') : "Missing";
-                const statusClass = isCorrect ? "correct-box" : "incorrect-box";
+
+                const rawInput = document.getElementById(`prob-${i}-input`).value.trim().toUpperCase();
+
+            // Format the student's answer or output N.A.
+            const formattedAnswer = rawInput === "" ? "N.A." : (isAMC ? rawInput : rawInput.padStart(3, '0'));
+
+            // Determine if correct based on the solutions array populated from problems_solutions.tex
+            const correctSolution = currentSolutions[i - 1]; 
+            let isCorrect = false;
+
+            if (rawInput !== "") {
+                if (isAMC) {
+                    isCorrect = (rawInput === correctSolution);
+                } else {
+                    // Safely parse as integers to compare 005 to 5, etc.
+                    isCorrect = (parseInt(rawInput, 10) === parseInt(correctSolution, 10));
+                }
+            }
+            
+            const formattedCorrectSolution = correctSolution !== undefined 
+                ? (isAMC ? correctSolution : correctSolution.toString().padStart(3, '0')) 
+                : "Missing";
+            const statusClass = isCorrect ? "correct-box" : "incorrect-box";
 
                 const resultRow = document.createElement('div');
                 resultRow.className = 'problem-row';
