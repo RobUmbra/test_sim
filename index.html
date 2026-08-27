@@ -304,8 +304,9 @@
                     }
                 });
 
-                document.getElementById('banner-filename').textContent = selectedFile;
-                document.getElementById('results-filename').textContent = selectedFile;
+                const displayName = selectedFile.replace('.tex', '');
+                document.getElementById('banner-filename').textContent = displayName;
+                document.getElementById('results-filename').textContent = displayName;
 
                 const problemsContainer = document.getElementById('problems-container');
                 problemsContainer.innerHTML = '';
