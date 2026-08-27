@@ -9,7 +9,7 @@
     <script>
       MathJax = {
         tex: { inlineMath: [['$', '$']] },
-        startup: { typeset: false } // We will trigger typesetting manually after loading the file
+        startup: { typeset: false } // Trigger typesetting manually after loading the file
       };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -21,6 +21,22 @@
             margin: 40px auto;
             padding: 20px;
             line-height: 1.6;
+            position: relative;
+        }
+        /* Watermark Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Mathematical_symbols_background.png'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -1;
         }
         #banner {
             background-color: #e9ecef;
@@ -54,8 +70,9 @@
             align-items: flex-start;
             margin-bottom: 30px;
             padding: 15px;
-            background: #f9f9f9;
+            background: rgba(249, 249, 249, 0.9); /* Slight transparency to show watermark */
             border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .problem-text {
             flex: 1;
@@ -66,7 +83,6 @@
             flex-direction: column;
             align-items: center;
         }
-        /* Using type="text" instead of number removes browser clicker arrows */
         input[type="text"].answer-input {
             width: 80px;
             font-size: 18px;
@@ -107,7 +123,8 @@
     </div>
 
     <script>
-        const fileName = 'problems.tex';
+        // Strict pathing applied here to resolve root directory fetches
+        const fileName = './problems.tex';
         const problemsContainer = document.getElementById('problems-container');
         let problemCount = 0;
 
@@ -121,12 +138,11 @@
                 // Split the text file by the "**Problem X**" formatting
                 const problemBlocks = text.split(/(?=\*\*Problem \d+\*\*)/g);
                 
-                problemBlocks.forEach((block, index) => {
+                problemBlocks.forEach((block) => {
                     if (block.trim() === '') return;
                     problemCount++;
                     
-                    // Format bold text for HTML if needed, though MathJax/Markdown might need manual HTML adjustment
-                    // Convert "**Problem X**" to HTML strong tags
+                    // Format bold text for HTML
                     let formattedBlock = block.replace(/\*\*(Problem \d+)\*\*/g, '<strong>$1</strong><br>');
                     
                     const problemRow = document.createElement('div');
@@ -150,12 +166,12 @@
                 }
             })
             .catch(error => {
-                problemsContainer.innerHTML = `<p style="color:red;">Error: Make sure the file <strong>${fileName}</strong> is in the same directory and hosted correctly on GitHub Pages.</p>`;
+                problemsContainer.innerHTML = `<p style="color:red; background: white; padding: 10px;">Error: Make sure the file <strong>${fileName}</strong> is in the same directory and hosted correctly on GitHub Pages. Note: This will not work if opened directly from your hard drive (file:///); it must be viewed on a live server.</p>`;
                 console.error(error);
             });
 
         // Timer Logic
-        let timeLeft = 600; // 10 minutes
+        let timeLeft = 200; // 10 minutes
         const timerElement = document.getElementById('timer');
         const testPage = document.getElementById('test-page');
         const resultsPage = document.getElementById('results-page');
@@ -195,6 +211,11 @@
                     <div class="answer-text">Answer entered: ${formattedAnswer}</div>
                 `;
                 resultsContainer.appendChild(resultRow);
+            }
+            
+            // Re-render MathJax on the results page just in case
+            if (window.MathJax) {
+                MathJax.typesetPromise();
             }
         }
     </script>
