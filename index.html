@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Math Testing Environment</title>
+    
     <!-- MathJax for rendering LaTeX -->
     <script>
       MathJax = {
-        tex: {
-          inlineMath: [['$', '$']]
-        }
+        tex: { inlineMath: [['$', '$']] },
+        startup: { typeset: false } // We will trigger typesetting manually after loading the file
       };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -21,6 +21,16 @@
             margin: 40px auto;
             padding: 20px;
             line-height: 1.6;
+        }
+        #banner {
+            background-color: #e9ecef;
+            color: #333;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
         }
         #header {
             display: flex;
@@ -56,11 +66,14 @@
             flex-direction: column;
             align-items: center;
         }
-        input[type="number"] {
+        /* Using type="text" instead of number removes browser clicker arrows */
+        input[type="text"].answer-input {
             width: 80px;
             font-size: 18px;
             padding: 5px;
             text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         .answer-text {
             font-size: 18px;
@@ -74,79 +87,75 @@
 </head>
 <body>
 
-    <!-- Testing Environment Page -->
     <div id="test-page">
+        <div id="banner">Problems loaded from: <strong>problems.tex</strong></div>
+        
         <div id="header">
             <h2>Math Assessment</h2>
             <div id="timer">10:00</div>
         </div>
 
         <div id="problems-container">
-            <!-- Problem 1 -->
-            <div class="problem-row">
-                <div class="problem-text" id="prob-1-text">
-                    <strong>Problem 1</strong><br>
-                    Patrick started walking at a constant speed along a straight road from his school to the park. One hour after Patrick left, Tanya started running at a constant speed of $2$ miles per hour faster than Patrick walked, following the same straight road from the school to the park. One hour after Tanya left, José started bicycling at a constant speed of $7$ miles per hour faster than Tanya ran, following the same straight road from the school to the park. All three people arrived at the park at the same time. The distance from the school to the park is $\frac{m}{n}$ miles, where $m$ and $n$ are relatively prime positive integers. Find $m+n$.[cite: 1]
-                </div>
-                <div class="answer-box">
-                    <input type="number" id="prob-1-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
-                </div>
-            </div>
-
-            <!-- Problem 2 -->
-            <div class="problem-row">
-                <div class="problem-text" id="prob-2-text">
-                    <strong>Problem 2</strong><br>
-                    Find the number of positive integer palindromes written in base $10$, with no zero digits, and whose digits add up to $13$. For example, $42124$ has these properties. Recall that a palindrome is a number whose representation reads the same from left to right as from right to left.[cite: 1]
-                </div>
-                <div class="answer-box">
-                    <input type="number" id="prob-2-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
-                </div>
-            </div>
-
-            <!-- Problem 3 -->
-            <div class="problem-row">
-                <div class="problem-text" id="prob-3-text">
-                    <strong>Problem 3</strong><br>
-                    A hemisphere with radius $200$ sits on top of a horizontal circular disk with radius $200$, and the hemisphere and disk have the same center. Let $\mathcal{T}$ be the region of points $P$ in the disk such that a sphere of radius $42$ can be placed on top of the disk at $P$ and lie completely inside the hemisphere. The area of $\mathcal{T}$ divided by the area of the disk is $\frac{p}{q}$, where $p$ and $q$ are relatively prime positive integers. Find $p+q$.[cite: 1]
-                </div>
-                <div class="answer-box">
-                    <input type="number" id="prob-3-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
-                </div>
-            </div>
-
-            <!-- Problem 4 -->
-            <div class="problem-row">
-                <div class="problem-text" id="prob-4-text">
-                    <strong>Problem 4</strong><br>
-                    Find the number of integers less than or equal to $100$ that are equal to $a+b+ab$ for some choice of distinct positive integers $a$ and $b$.[cite: 1]
-                </div>
-                <div class="answer-box">
-                    <input type="number" id="prob-4-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
-                </div>
-            </div>
-
-            <!-- Problem 5 -->
-            <div class="problem-row">
-                <div class="problem-text" id="prob-5-text">
-                    <strong>Problem 5</strong><br>
-                    A plane contains points $A$ and $B$ with $AB = 1$. Point $A$ is rotated in the plane counterclockwise through an acute angle $\theta$ around point $B$ to point $A'$. Then $B$ is rotated in the plane clockwise through angle $\theta$ around point $A'$ to point $B'$. Suppose $AB' = \frac{4}{3}$. The value of $\cos \theta$ can be written as $\frac{m}{n}$, where $m$ and $n$ are relatively prime positive integers. Find $m+n$.[cite: 1]
-                </div>
-                <div class="answer-box">
-                    <input type="number" id="prob-5-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
-                </div>
-            </div>
+            <!-- Problems will be injected here via JavaScript -->
         </div>
     </div>
 
-    <!-- Results Page -->
     <div id="results-page">
+        <div id="banner">Results for: <strong>problems.tex</strong></div>
         <h2>Time Expired: Test Results</h2>
         <div id="results-container"></div>
     </div>
 
     <script>
-        let timeLeft = 600; // 10 minutes in seconds
+        const fileName = 'problems.tex';
+        const problemsContainer = document.getElementById('problems-container');
+        let problemCount = 0;
+
+        // Fetch and parse the .tex file
+        fetch(fileName)
+            .then(response => {
+                if (!response.ok) throw new Error("Could not load " + fileName);
+                return response.text();
+            })
+            .then(text => {
+                // Split the text file by the "**Problem X**" formatting
+                const problemBlocks = text.split(/(?=\*\*Problem \d+\*\*)/g);
+                
+                problemBlocks.forEach((block, index) => {
+                    if (block.trim() === '') return;
+                    problemCount++;
+                    
+                    // Format bold text for HTML if needed, though MathJax/Markdown might need manual HTML adjustment
+                    // Convert "**Problem X**" to HTML strong tags
+                    let formattedBlock = block.replace(/\*\*(Problem \d+)\*\*/g, '<strong>$1</strong><br>');
+                    
+                    const problemRow = document.createElement('div');
+                    problemRow.className = 'problem-row';
+                    problemRow.innerHTML = `
+                        <div class="problem-text" id="prob-${problemCount}-text">
+                            ${formattedBlock}
+                        </div>
+                        <div class="answer-box">
+                            <input type="text" class="answer-input" id="prob-${problemCount}-input" 
+                                maxlength="3" placeholder="000" 
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                        </div>
+                    `;
+                    problemsContainer.appendChild(problemRow);
+                });
+
+                // Trigger MathJax to render the newly injected LaTeX
+                if (window.MathJax) {
+                    MathJax.typesetPromise();
+                }
+            })
+            .catch(error => {
+                problemsContainer.innerHTML = `<p style="color:red;">Error: Make sure the file <strong>${fileName}</strong> is in the same directory and hosted correctly on GitHub Pages.</p>`;
+                console.error(error);
+            });
+
+        // Timer Logic
+        let timeLeft = 600; // 10 minutes
         const timerElement = document.getElementById('timer');
         const testPage = document.getElementById('test-page');
         const resultsPage = document.getElementById('results-page');
@@ -155,19 +164,15 @@
         const timerInterval = setInterval(() => {
             timeLeft--;
             
-            // Calculate minutes and seconds
             let minutes = Math.floor(timeLeft / 60);
             let seconds = timeLeft % 60;
             
-            // Format time display
             timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-            // Turn timer red when less than 1 minute remains
             if (timeLeft < 60) {
                 timerElement.classList.add('red');
             }
 
-            // End test when time expires
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 finishTest();
@@ -175,17 +180,14 @@
         }, 1000);
 
         function finishTest() {
-            // Hide test view, show results view
             testPage.style.display = 'none';
             resultsPage.style.display = 'block';
 
-            // Loop through all 5 problems to populate the results
-            for (let i = 1; i <= 5; i++) {
+            for (let i = 1; i <= problemCount; i++) {
                 const probText = document.getElementById(`prob-${i}-text`).innerHTML;
                 const userInput = document.getElementById(`prob-${i}-input`).value;
                 const formattedAnswer = userInput === "" ? "No Answer" : userInput.padStart(3, '0');
 
-                // Create a new div for each result
                 const resultRow = document.createElement('div');
                 resultRow.className = 'problem-row';
                 resultRow.innerHTML = `
