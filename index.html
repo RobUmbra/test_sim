@@ -159,6 +159,27 @@
             color: #333;
             text-align: center;
         }
+        /* Print Formatting */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            #print-btn {
+                display: none; /* Hides the print button on the actual PDF */
+            }
+            .problem-row {
+                page-break-inside: avoid; /* Prevents a problem from splitting across two pages */
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+            /* Forces the browser to print background colors for the correct/incorrect boxes */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+        
     </style>
 </head>
 <body>
@@ -199,6 +220,14 @@
         <div id="banner">Results for: <strong id="results-filename"></strong></div>
         <h2>Test Results</h2>
         <div id="results-container"></div>
+
+        <!-- Results Page -->
+        <div id="results-page">
+        <div id="banner">Results for: <strong id="results-filename"></strong></div>
+        <h2>Test Results</h2>
+        <div id="results-container"></div>
+        <button id="print-btn" onclick="window.print()" style="margin-top: 20px; display: block; margin-left: auto; margin-right: auto;">Save as PDF</button>
+        </div>
     </div>
 
     <script>
