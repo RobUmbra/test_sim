@@ -9,7 +9,7 @@
     <script>
       MathJax = {
         tex: { inlineMath: [['$', '$']] },
-        startup: { typeset: false } // Trigger typesetting manually after loading the file
+        startup: { typeset: false } 
       };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -23,7 +23,6 @@
             line-height: 1.6;
             position: relative;
         }
-        /* Watermark Background */
         body::before {
             content: "";
             position: fixed;
@@ -37,6 +36,40 @@
             background-repeat: no-repeat;
             opacity: 0.1;
             z-index: -1;
+        }
+        /* Landing Page Styles */
+        #landing-page {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 50px;
+        }
+        select {
+            font-size: 18px;
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: 60%;
+            max-width: 400px;
+        }
+        button {
+            font-size: 18px;
+            padding: 10px 25px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #004494;
+        }
+        /* Test Page Styles */
+        #test-page, #results-page {
+            display: none;
         }
         #banner {
             background-color: #e9ecef;
@@ -70,7 +103,7 @@
             align-items: flex-start;
             margin-bottom: 30px;
             padding: 15px;
-            background: rgba(249, 249, 249, 0.9); /* Slight transparency to show watermark */
+            background: rgba(249, 249, 249, 0.9); 
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -96,15 +129,25 @@
             font-weight: bold;
             color: #0056b3;
         }
-        #results-page {
-            display: none;
-        }
     </style>
 </head>
 <body>
 
+    <!-- Landing Page -->
+    <div id="landing-page">
+        <h2>Select a Problem Set</h2>
+        <p>Choose the test you want to take from the dropdown below. The 10-minute timer will begin immediately when you click start.</p>
+        <select id="file-selector">
+            <!-- Options populated by JS -->
+        </select>
+        <br>
+        <button id="start-btn">Start Test</button>
+        <div id="loading-error" style="color: red; margin-top: 15px; display: none;"></div>
+    </div>
+
+    <!-- Test Page -->
     <div id="test-page">
-        <div id="banner">Problems loaded from: <strong>problems.tex</strong></div>
+        <div id="banner">Problems loaded from: <strong id="banner-filename"></strong></div>
         
         <div id="header">
             <h2>Math Assessment</h2>
@@ -112,92 +155,134 @@
         </div>
 
         <div id="problems-container">
-            <!-- Problems will be injected here via JavaScript -->
+            <!-- Problems injected here -->
         </div>
     </div>
 
+    <!-- Results Page -->
     <div id="results-page">
-        <div id="banner">Results for: <strong>problems.tex</strong></div>
+        <div id="banner">Results for: <strong id="results-filename"></strong></div>
         <h2>Time Expired: Test Results</h2>
         <div id="results-container"></div>
     </div>
 
     <script>
-        // Strict pathing applied here to resolve root directory fetches
-        const fileName = './problems.tex';
-        const problemsContainer = document.getElementById('problems-container');
+        // --- 1. Define Available Files ---
+        // Add all your .tex filenames to this list. 
+        // This acts as the directory for the dropdown menu.
+        const fileList = [
+            'problems.tex',
+            'problems2.tex',
+        ];
+
+        // --- 2. Setup Landing Page ---
+        const selector = document.getElementById('file-selector');
+        const startBtn = document.getElementById('start-btn');
+        const errorDiv = document.getElementById('loading-error');
+        
+        // Populate the dropdown
+        fileList.forEach(file => {
+            let option = document.createElement('option');
+            option.value = file;
+            option.textContent = file;
+            selector.appendChild(option);
+        });
+
         let problemCount = 0;
+        let timerInterval;
 
-        // Fetch and parse the .tex file
-        fetch(fileName)
-            .then(response => {
-                if (!response.ok) throw new Error("Could not load " + fileName);
-                return response.text();
-            })
-            .then(text => {
-                // Split the text file by the "**Problem X**" formatting
-                const problemBlocks = text.split(/(?=\*\*Problem \d+\*\*)/g);
-                
-                problemBlocks.forEach((block) => {
-                    if (block.trim() === '') return;
-                    problemCount++;
+        // --- 3. Start Button Logic ---
+        startBtn.addEventListener('click', () => {
+            const selectedFile = selector.value;
+            const filePath = `./${selectedFile}`;
+            
+            // Disable button while loading
+            startBtn.disabled = true;
+            startBtn.textContent = "Loading...";
+            errorDiv.style.display = "none";
+
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) throw new Error("Could not load file. Is it uploaded to the repository?");
+                    return response.text();
+                })
+                .then(text => {
+                    // Update banners
+                    document.getElementById('banner-filename').textContent = selectedFile;
+                    document.getElementById('results-filename').textContent = selectedFile;
+
+                    // Parse and build test
+                    const problemsContainer = document.getElementById('problems-container');
+                    const problemBlocks = text.split(/(?=\*\*Problem \d+\*\*)/g);
                     
-                    // Format bold text for HTML
-                    let formattedBlock = block.replace(/\*\*(Problem \d+)\*\*/g, '<strong>$1</strong><br>');
-                    
-                    const problemRow = document.createElement('div');
-                    problemRow.className = 'problem-row';
-                    problemRow.innerHTML = `
-                        <div class="problem-text" id="prob-${problemCount}-text">
-                            ${formattedBlock}
-                        </div>
-                        <div class="answer-box">
-                            <input type="text" class="answer-input" id="prob-${problemCount}-input" 
-                                maxlength="3" placeholder="000" 
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                        </div>
-                    `;
-                    problemsContainer.appendChild(problemRow);
+                    problemBlocks.forEach((block) => {
+                        if (block.trim() === '') return;
+                        problemCount++;
+                        
+                        let formattedBlock = block.replace(/\*\*(Problem \d+)\*\*/g, '<strong>$1</strong><br>');
+                        
+                        const problemRow = document.createElement('div');
+                        problemRow.className = 'problem-row';
+                        problemRow.innerHTML = `
+                            <div class="problem-text" id="prob-${problemCount}-text">
+                                ${formattedBlock}
+                            </div>
+                            <div class="answer-box">
+                                <input type="text" class="answer-input" id="prob-${problemCount}-input" 
+                                    maxlength="3" placeholder="000" 
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                            </div>
+                        `;
+                        problemsContainer.appendChild(problemRow);
+                    });
+
+                    // Trigger MathJax
+                    if (window.MathJax) {
+                        MathJax.typesetPromise();
+                    }
+
+                    // Transition UI and start timer
+                    document.getElementById('landing-page').style.display = 'none';
+                    document.getElementById('test-page').style.display = 'block';
+                    startTimer();
+                })
+                .catch(error => {
+                    startBtn.disabled = false;
+                    startBtn.textContent = "Start Test";
+                    errorDiv.textContent = `Error: Cannot load ${selectedFile}. Make sure it is spelled correctly and committed to GitHub.`;
+                    errorDiv.style.display = "block";
+                    console.error(error);
                 });
+        });
 
-                // Trigger MathJax to render the newly injected LaTeX
-                if (window.MathJax) {
-                    MathJax.typesetPromise();
+        // --- 4. Timer & Completion Logic ---
+        function startTimer() {
+            let timeLeft = 600; // 10 minutes
+            const timerElement = document.getElementById('timer');
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                
+                timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                if (timeLeft < 60) {
+                    timerElement.classList.add('red');
                 }
-            })
-            .catch(error => {
-                problemsContainer.innerHTML = `<p style="color:red; background: white; padding: 10px;">Error: Make sure the file <strong>${fileName}</strong> is in the same directory and hosted correctly on GitHub Pages. Note: This will not work if opened directly from your hard drive (file:///); it must be viewed on a live server.</p>`;
-                console.error(error);
-            });
 
-        // Timer Logic
-        let timeLeft = 200; // 10 minutes
-        const timerElement = document.getElementById('timer');
-        const testPage = document.getElementById('test-page');
-        const resultsPage = document.getElementById('results-page');
-        const resultsContainer = document.getElementById('results-container');
-
-        const timerInterval = setInterval(() => {
-            timeLeft--;
-            
-            let minutes = Math.floor(timeLeft / 60);
-            let seconds = timeLeft % 60;
-            
-            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
-            if (timeLeft < 60) {
-                timerElement.classList.add('red');
-            }
-
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                finishTest();
-            }
-        }, 1000);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finishTest();
+                }
+            }, 1000);
+        }
 
         function finishTest() {
-            testPage.style.display = 'none';
-            resultsPage.style.display = 'block';
+            document.getElementById('test-page').style.display = 'none';
+            document.getElementById('results-page').style.display = 'block';
+            const resultsContainer = document.getElementById('results-container');
 
             for (let i = 1; i <= problemCount; i++) {
                 const probText = document.getElementById(`prob-${i}-text`).innerHTML;
@@ -213,7 +298,6 @@
                 resultsContainer.appendChild(resultRow);
             }
             
-            // Re-render MathJax on the results page just in case
             if (window.MathJax) {
                 MathJax.typesetPromise();
             }
