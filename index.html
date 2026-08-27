@@ -126,6 +126,7 @@
         .problem-text {
             flex: 1;
             margin-right: 30px;
+            white-space: pre-wrap;
         }
         .answer-box {
             display: flex;
@@ -139,7 +140,16 @@
             text-align: center;
             border: 1px solid #ccc;
             border-radius: 4px;
+            color: #000; /* Ensures typed text is dark black */
+            font-weight: bold; /* Makes typed text heavier */
         }
+
+        input[type="text"].answer-input::placeholder {
+            color: #e0e0e0; /* Very faint gray */
+            font-weight: normal; /* Keeps the placeholder thin */
+            opacity: 1; /* Prevents Firefox from overriding the color */
+        }
+        
         /* Result Box Coloring */
         input[type="text"].correct-box {
             background-color: #d4edda;
