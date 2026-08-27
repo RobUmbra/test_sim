@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Testing Environment</title>
+    <!-- MathJax for rendering LaTeX -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$']]
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        #timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: black;
+        }
+        .red {
+            color: red !important;
+        }
+        .problem-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .problem-text {
+            flex: 1;
+            margin-right: 30px;
+        }
+        .answer-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input[type="number"] {
+            width: 80px;
+            font-size: 18px;
+            padding: 5px;
+            text-align: center;
+        }
+        .answer-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0056b3;
+        }
+        #results-page {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Testing Environment Page -->
+    <div id="test-page">
+        <div id="header">
+            <h2>Math Assessment</h2>
+            <div id="timer">10:00</div>
+        </div>
+
+        <div id="problems-container">
+            <!-- Problem 1 -->
+            <div class="problem-row">
+                <div class="problem-text" id="prob-1-text">
+                    <strong>Problem 1</strong><br>
+                    Patrick started walking at a constant speed along a straight road from his school to the park. One hour after Patrick left, Tanya started running at a constant speed of $2$ miles per hour faster than Patrick walked, following the same straight road from the school to the park. One hour after Tanya left, José started bicycling at a constant speed of $7$ miles per hour faster than Tanya ran, following the same straight road from the school to the park. All three people arrived at the park at the same time. The distance from the school to the park is $\frac{m}{n}$ miles, where $m$ and $n$ are relatively prime positive integers. Find $m+n$.[cite: 1]
+                </div>
+                <div class="answer-box">
+                    <input type="number" id="prob-1-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
+                </div>
+            </div>
+
+            <!-- Problem 2 -->
+            <div class="problem-row">
+                <div class="problem-text" id="prob-2-text">
+                    <strong>Problem 2</strong><br>
+                    Find the number of positive integer palindromes written in base $10$, with no zero digits, and whose digits add up to $13$. For example, $42124$ has these properties. Recall that a palindrome is a number whose representation reads the same from left to right as from right to left.[cite: 1]
+                </div>
+                <div class="answer-box">
+                    <input type="number" id="prob-2-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
+                </div>
+            </div>
+
+            <!-- Problem 3 -->
+            <div class="problem-row">
+                <div class="problem-text" id="prob-3-text">
+                    <strong>Problem 3</strong><br>
+                    A hemisphere with radius $200$ sits on top of a horizontal circular disk with radius $200$, and the hemisphere and disk have the same center. Let $\mathcal{T}$ be the region of points $P$ in the disk such that a sphere of radius $42$ can be placed on top of the disk at $P$ and lie completely inside the hemisphere. The area of $\mathcal{T}$ divided by the area of the disk is $\frac{p}{q}$, where $p$ and $q$ are relatively prime positive integers. Find $p+q$.[cite: 1]
+                </div>
+                <div class="answer-box">
+                    <input type="number" id="prob-3-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
+                </div>
+            </div>
+
+            <!-- Problem 4 -->
+            <div class="problem-row">
+                <div class="problem-text" id="prob-4-text">
+                    <strong>Problem 4</strong><br>
+                    Find the number of integers less than or equal to $100$ that are equal to $a+b+ab$ for some choice of distinct positive integers $a$ and $b$.[cite: 1]
+                </div>
+                <div class="answer-box">
+                    <input type="number" id="prob-4-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
+                </div>
+            </div>
+
+            <!-- Problem 5 -->
+            <div class="problem-row">
+                <div class="problem-text" id="prob-5-text">
+                    <strong>Problem 5</strong><br>
+                    A plane contains points $A$ and $B$ with $AB = 1$. Point $A$ is rotated in the plane counterclockwise through an acute angle $\theta$ around point $B$ to point $A'$. Then $B$ is rotated in the plane clockwise through angle $\theta$ around point $A'$ to point $B'$. Suppose $AB' = \frac{4}{3}$. The value of $\cos \theta$ can be written as $\frac{m}{n}$, where $m$ and $n$ are relatively prime positive integers. Find $m+n$.[cite: 1]
+                </div>
+                <div class="answer-box">
+                    <input type="number" id="prob-5-input" min="0" max="999" placeholder="000" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Page -->
+    <div id="results-page">
+        <h2>Time Expired: Test Results</h2>
+        <div id="results-container"></div>
+    </div>
+
+    <script>
+        let timeLeft = 600; // 10 minutes in seconds
+        const timerElement = document.getElementById('timer');
+        const testPage = document.getElementById('test-page');
+        const resultsPage = document.getElementById('results-page');
+        const resultsContainer = document.getElementById('results-container');
+
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            
+            // Calculate minutes and seconds
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            
+            // Format time display
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            // Turn timer red when less than 1 minute remains
+            if (timeLeft < 60) {
+                timerElement.classList.add('red');
+            }
+
+            // End test when time expires
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                finishTest();
+            }
+        }, 1000);
+
+        function finishTest() {
+            // Hide test view, show results view
+            testPage.style.display = 'none';
+            resultsPage.style.display = 'block';
+
+            // Loop through all 5 problems to populate the results
+            for (let i = 1; i <= 5; i++) {
+                const probText = document.getElementById(`prob-${i}-text`).innerHTML;
+                const userInput = document.getElementById(`prob-${i}-input`).value;
+                const formattedAnswer = userInput === "" ? "No Answer" : userInput.padStart(3, '0');
+
+                // Create a new div for each result
+                const resultRow = document.createElement('div');
+                resultRow.className = 'problem-row';
+                resultRow.innerHTML = `
+                    <div class="problem-text">${probText}</div>
+                    <div class="answer-text">Answer entered: ${formattedAnswer}</div>
+                `;
+                resultsContainer.appendChild(resultRow);
+            }
+        }
+    </script>
+</body>
+</html>
