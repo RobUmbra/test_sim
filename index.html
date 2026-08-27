@@ -46,14 +46,21 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             margin-top: 50px;
         }
-        select {
+        select, input[type="range"] {
             font-size: 18px;
-            padding: 10px;
             margin: 20px 0;
-            border-radius: 4px;
-            border: 1px solid #ccc;
             width: 60%;
             max-width: 400px;
+        }
+        select {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .slider-container {
+            margin: 30px auto;
+            font-size: 18px;
+            font-weight: bold;
         }
         button {
             font-size: 18px;
@@ -127,7 +134,20 @@
         .answer-text {
             font-size: 18px;
             font-weight: bold;
-            color: #0056b3;
+            text-align: center;
+            padding: 10px;
+            border-radius: 4px;
+            min-width: 150px;
+        }
+        .correct {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .incorrect {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
@@ -136,11 +156,17 @@
     <!-- Landing Page -->
     <div id="landing-page">
         <h2>Select a Problem Set</h2>
-        <p>Choose the test you want to take from the dropdown below. The 10-minute timer will begin immediately when you click start.</p>
+        <p>Choose the test you want to take and allocate your time.</p>
+        
         <select id="file-selector">
             <!-- Options populated by JS -->
         </select>
-        <br>
+        
+        <div class="slider-container">
+            <label for="time-slider">Test Duration: <span id="time-display" style="color: #0056b3;">10</span> minutes</label><br>
+            <input type="range" id="time-slider" min="5" max="90" value="10">
+        </div>
+        
         <button id="start-btn">Start Test</button>
         <div id="loading-error" style="color: red; margin-top: 15px; display: none;"></div>
     </div>
@@ -168,17 +194,16 @@
 
     <script>
         // --- 1. Define Available Files ---
-        // Add all your .tex filenames to this list. 
-        // This acts as the directory for the dropdown menu.
         const fileList = [
-            'problems.tex',
-            'problems2.tex',
+            'problems.tex'
         ];
 
         // --- 2. Setup Landing Page ---
         const selector = document.getElementById('file-selector');
         const startBtn = document.getElementById('start-btn');
         const errorDiv = document.getElementById('loading-error');
+        const timeSlider = document.getElementById('time-slider');
+        const timeDisplay = document.getElementById('time-display');
         
         // Populate the dropdown
         fileList.forEach(file => {
@@ -188,85 +213,104 @@
             selector.appendChild(option);
         });
 
+        // Update time display when slider moves
+        timeSlider.addEventListener('input', () => {
+            timeDisplay.textContent = timeSlider.value;
+        });
+
         let problemCount = 0;
         let timerInterval;
+        let currentSolutions = []; 
+        let testDurationSeconds = 600;
 
-        // --- 3. Start Button Logic ---
+        // --- 3. Start Button Logic (Fetch Problems & Solutions) ---
         startBtn.addEventListener('click', () => {
             const selectedFile = selector.value;
-            const filePath = `./${selectedFile}`;
+            const probFilePath = `./${selectedFile}`;
+            const solFilePath = `./${selectedFile.replace('.tex', '_solutions.tex')}`;
             
             // Disable button while loading
             startBtn.disabled = true;
             startBtn.textContent = "Loading...";
             errorDiv.style.display = "none";
 
-            fetch(filePath)
-                .then(response => {
-                    if (!response.ok) throw new Error("Could not load file. Is it uploaded to the repository?");
-                    return response.text();
-                })
-                .then(text => {
-                    // Update banners
-                    document.getElementById('banner-filename').textContent = selectedFile;
-                    document.getElementById('results-filename').textContent = selectedFile;
-
-                    // Parse and build test
-                    const problemsContainer = document.getElementById('problems-container');
-                    const problemBlocks = text.split(/(?=\*\*Problem \d+\*\*)/g);
-                    
-                    problemBlocks.forEach((block) => {
-                        if (block.trim() === '') return;
-                        problemCount++;
-                        
-                        let formattedBlock = block.replace(/\*\*(Problem \d+)\*\*/g, '<strong>$1</strong><br>');
-                        
-                        const problemRow = document.createElement('div');
-                        problemRow.className = 'problem-row';
-                        problemRow.innerHTML = `
-                            <div class="problem-text" id="prob-${problemCount}-text">
-                                ${formattedBlock}
-                            </div>
-                            <div class="answer-box">
-                                <input type="text" class="answer-input" id="prob-${problemCount}-input" 
-                                    maxlength="3" placeholder="000" 
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                            </div>
-                        `;
-                        problemsContainer.appendChild(problemRow);
-                    });
-
-                    // Trigger MathJax
-                    if (window.MathJax) {
-                        MathJax.typesetPromise();
+            // Fetch both files simultaneously
+            Promise.all([
+                fetch(probFilePath).then(r => { if (!r.ok) throw new Error(`Cannot load ${selectedFile}`); return r.text(); }),
+                fetch(solFilePath).then(r => { if (!r.ok) throw new Error(`Cannot load solutions for ${selectedFile}`); return r.text(); })
+            ])
+            .then(([probText, solText]) => {
+                // Parse the solutions file based on the provided format
+                const solutionBlocks = solText.split(/(?=\*\*Problem \d+\*\*)/g);
+                solutionBlocks.forEach((block) => {
+                    if (block.trim() === '') return;
+                    // Extracts the integer placed directly after "**Problem X**"
+                    const match = block.match(/\*\*Problem \d+\*\*\s+(\d+)/); 
+                    if (match) {
+                        currentSolutions.push(parseInt(match[1], 10));
                     }
-
-                    // Transition UI and start timer
-                    document.getElementById('landing-page').style.display = 'none';
-                    document.getElementById('test-page').style.display = 'block';
-                    startTimer();
-                })
-                .catch(error => {
-                    startBtn.disabled = false;
-                    startBtn.textContent = "Start Test";
-                    errorDiv.textContent = `Error: Cannot load ${selectedFile}. Make sure it is spelled correctly and committed to GitHub.`;
-                    errorDiv.style.display = "block";
-                    console.error(error);
                 });
+
+                // Update banners
+                document.getElementById('banner-filename').textContent = selectedFile;
+                document.getElementById('results-filename').textContent = selectedFile;
+
+                // Parse and build test problems
+                const problemsContainer = document.getElementById('problems-container');
+                const problemBlocks = probText.split(/(?=\*\*Problem \d+\*\*)/g);
+                
+                problemBlocks.forEach((block) => {
+                    if (block.trim() === '') return;
+                    problemCount++;
+                    
+                    let formattedBlock = block.replace(/\*\*(Problem \d+)\*\*/g, '<strong>$1</strong><br>');
+                    
+                    const problemRow = document.createElement('div');
+                    problemRow.className = 'problem-row';
+                    problemRow.innerHTML = `
+                        <div class="problem-text" id="prob-${problemCount}-text">
+                            ${formattedBlock}
+                        </div>
+                        <div class="answer-box">
+                            <input type="text" class="answer-input" id="prob-${problemCount}-input" 
+                                maxlength="3" placeholder="000" 
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                        </div>
+                    `;
+                    problemsContainer.appendChild(problemRow);
+                });
+
+                // Trigger MathJax
+                if (window.MathJax) {
+                    MathJax.typesetPromise();
+                }
+
+                // Transition UI and start timer
+                testDurationSeconds = parseInt(timeSlider.value, 10) * 60;
+                document.getElementById('landing-page').style.display = 'none';
+                document.getElementById('test-page').style.display = 'block';
+                startTimer();
+            })
+            .catch(error => {
+                startBtn.disabled = false;
+                startBtn.textContent = "Start Test";
+                errorDiv.textContent = error.message + ". Make sure it is committed to GitHub.";
+                errorDiv.style.display = "block";
+                console.error(error);
+            });
         });
 
-        // --- 4. Timer & Completion Logic ---
+        // --- 4. Timer Logic ---
         function startTimer() {
-            let timeLeft = 600; // 10 minutes
+            let timeLeft = testDurationSeconds;
             const timerElement = document.getElementById('timer');
+
+            // Set initial display
+            updateTimerDisplay(timeLeft, timerElement);
 
             timerInterval = setInterval(() => {
                 timeLeft--;
-                
-                let minutes = Math.floor(timeLeft / 60);
-                let seconds = timeLeft % 60;
-                
-                timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                updateTimerDisplay(timeLeft, timerElement);
 
                 if (timeLeft < 60) {
                     timerElement.classList.add('red');
@@ -279,6 +323,13 @@
             }, 1000);
         }
 
+        function updateTimerDisplay(time, element) {
+            let minutes = Math.floor(time / 60);
+            let seconds = time % 60;
+            element.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        // --- 5. Completion & Grading Logic ---
         function finishTest() {
             document.getElementById('test-page').style.display = 'none';
             document.getElementById('results-page').style.display = 'block';
@@ -289,11 +340,20 @@
                 const userInput = document.getElementById(`prob-${i}-input`).value;
                 const formattedAnswer = userInput === "" ? "No Answer" : userInput.padStart(3, '0');
 
+                // Grade the problem
+                const correctSolution = currentSolutions[i - 1]; // Arrays are 0-indexed
+                const isCorrect = (userInput !== "" && parseInt(userInput, 10) === correctSolution);
+                const statusClass = isCorrect ? "correct" : "incorrect";
+                const formattedCorrectSolution = correctSolution !== undefined ? correctSolution.toString().padStart(3, '0') : "N/A";
+
                 const resultRow = document.createElement('div');
                 resultRow.className = 'problem-row';
                 resultRow.innerHTML = `
                     <div class="problem-text">${probText}</div>
-                    <div class="answer-text">Answer entered: ${formattedAnswer}</div>
+                    <div class="answer-text ${statusClass}">
+                        <div><strong>Your Answer:</strong> ${formattedAnswer}</div>
+                        ${!isCorrect ? `<div style="margin-top: 5px;"><strong>Correct Answer:</strong> ${formattedCorrectSolution}</div>` : ''}
+                    </div>
                 `;
                 resultsContainer.appendChild(resultRow);
             }
