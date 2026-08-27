@@ -103,14 +103,21 @@
             align-items: center;
             border-bottom: 2px solid #ccc;
             padding-bottom: 10px;
+            padding-top: 10px; /* Adds breathing room when stuck to the top */
             margin-bottom: 20px;
+            
+            /* The required sticky properties */
             position: sticky;
+            top: 0; 
+            background-color: white; /* Prevents scrolling problems from clashing */
+            z-index: 100; /* Forces it to hover above the other elements */
         }
+        
         #timer {
             font-size: 24px;
             font-weight: bold;
             color: black;
-            position: sticky;
+            /* Removed the redundant position: sticky from here */
         }
         .red {
             color: red !important;
