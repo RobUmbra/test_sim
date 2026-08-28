@@ -225,8 +225,10 @@
     <div id="test-page">
         <div id="banner">Problems loaded from: <strong id="banner-filename"></strong></div>
         
-        <div id="header">
+       <div id="header">
             <h2>Math Assessment</h2>
+            <!-- New tracker added below -->
+            <div id="progress-tracker" style="font-size: 18px; font-weight: bold; color: #555;"></div>
             <div id="timer">10:00</div>
         </div>
 
@@ -342,6 +344,34 @@
                     MathJax.typesetPromise();
                 }
 
+            
+                // --- NEW PROGRESS TRACKER CODE STARTS HERE ---
+                const progressTracker = document.getElementById('progress-tracker');
+                progressTracker.textContent = `0 / ${problemCount} Answered`;
+
+                const answerInputs = document.querySelectorAll('.answer-input');
+
+                answerInputs.forEach(input => {
+                    input.addEventListener('input', () => {
+                        let answeredCount = 0;
+                        answerInputs.forEach(inp => {
+                            if (inp.value.trim() !== "") {
+                                answeredCount++;
+                            }
+                        });
+                        progressTracker.textContent = `${answeredCount} / ${problemCount} Answered`;
+                    });
+                });
+                // --- NEW PROGRESS TRACKER CODE ENDS HERE ---
+
+                testDurationSeconds = parseInt(timeSlider.value, 10) * 60;
+                document.getElementById('landing-page').style.display = 'none';
+                document.getElementById('test-page').style.display = 'block';
+                startTimer();
+            })
+            .catch(error => {
+                startBtn.disabled = false;
+                
                 testDurationSeconds = parseInt(timeSlider.value, 10) * 60;
                 document.getElementById('landing-page').style.display = 'none';
                 document.getElementById('test-page').style.display = 'block';
